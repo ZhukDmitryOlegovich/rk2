@@ -37,6 +37,9 @@ const parseVars = (s: string): Vars => {
 // eslint-disable-next-line no-use-before-define
 type Rule = Func | string;
 
+// eslint-disable-next-line no-unused-vars
+const ruleToString = (r: Rule): String => (typeof r === 'string' ? r : `${r.name}(${r.args.map(ruleToString).join(',')})`);
+
 type Func = {
 	name: string;
 	args: Rule[];
@@ -82,6 +85,9 @@ const getAllFunc = (f: Rule): Func[] => (
 );
 
 type Rules = [Rule, Rule][];
+
+// eslint-disable-next-line no-unused-vars
+const pairRuleToString = (rr: [Rule, Rule]) => rr.map(ruleToString).join(' -> ');
 
 type FuncsDec = Map<string, number>;
 
@@ -134,6 +140,21 @@ const parseRules = (
 	};
 };
 
+// eslint-disable-next-line no-nested-ternary
+const deepEqual = (a: Rule, b: Rule): boolean => (typeof a === 'string'
+	? (typeof b === 'string'
+		? a === b
+		: false)
+	: (typeof b === 'string'
+		? false
+		: a.name === b.name && a.args.every(
+			(_, i) => deepEqual(a.args[i], b.args[i]),
+		)));
+
+// const deepCopy = (a: Rule): Rule => (typeof a === 'string'
+// 	? a
+// 	: { name: a.name, args: a.args.map(deepCopy) });
+
 type Checker = (rules: Rules, vars: Vars, funcsDec: FuncsDec) => boolean | null;
 
 const CHECKERS: readonly Checker[] = [
@@ -180,26 +201,124 @@ const CHECKERS: readonly Checker[] = [
 	) || null,
 	/**
 	 * Существует правило порождающее "само себя" [g(x) -> {g(x)} h(f(H, g(x)))]
+	 * и
+	 * Добавляем к оригинальным правилам их "потомков" (n раз):
+	 * [f(x,x) -> f(g(x),x)]
+	 * [g(h(E)) -> h(E)]
+	 * =>
+	 * [f(h(E),h(E)) -> f(h(E),h(E))]
 	 */
 	(rules, vars, funcsDec) => {
+		let allRuleByFuncName = rules.reduce<Record<string, [Rule, Rule][] | undefined>>( // ! TODO: var first
+			// eslint-disable-next-line no-return-assign
+			(map, rule) => ((map[(rule[0] as Func).name] ??= []).push(rule), map), {},
+		);
+
+		const setNewVars = (
+			v: string, r: Rule, useVars: Record<string, Rule>, deepCheck: boolean,
+		) => {
+			if (deepCheck && getAllTerm(r).includes(v)) {
+				return false;
+			}
+			if (!useVars[v]) {
+				useVars[v] = r;
+			} else if (!deepEqual(useVars[v], r)) {
+				return false;
+			}
+			return true;
+		};
+
+		const deepEqualWithVars = (
+			a: Rule, b: Rule, useVars: Record<string, Rule>, deepCheck = false,
+		): boolean => {
+			if (typeof a === 'string') {
+				if (vars.has(a)) {
+					return setNewVars(a, b, useVars, deepCheck);
+				}
+				if (typeof b === 'string' && vars.has(b)) {
+					return setNewVars(b, a, useVars, deepCheck);
+				}
+				return a === b;
+			}
+			if (typeof b === 'string') {
+				return vars.has(b) && setNewVars(b, a, useVars, deepCheck);
+			}
+			return a.name === b.name && a.args.every(
+				(_, i) => deepEqualWithVars(a.args[i], b.args[i], useVars),
+			);
+		};
+
 		// eslint-disable-next-line no-nested-ternary
-		const deepEqual = (a: Rule, b: Rule): boolean => (typeof a === 'string'
-			? (typeof b === 'string'
-				? a === b
-				: false)
-			: (typeof b === 'string'
-				? false
-				: a.name === b.name && a.args.every(
-					(_, i) => deepEqual(a.args[i], b.args[i]),
-				)));
+		const replaceVars = (a: Rule, useVars: Record<string, Rule>): Rule => (typeof a === 'string'
+			? (useVars[a] ? useVars[a] : a)
+			: { name: a.name, args: a.args.map((arg) => replaceVars(arg, useVars)) });
+
+		// eslint-disable-next-line no-nested-ternary
+		const replaceRule = (a: Rule, equal: Rule, replace: Rule): Rule => (deepEqual(a, equal)
+			? replace
+			: (typeof a === 'string'
+				? a
+				: { name: a.name, args: a.args.map((arg) => replaceRule(arg, equal, replace)) }));
 
 		const checkSomeRuleCallback = (a: Rule, callback: (v: Rule) => boolean) => (
 			callback(a) || (typeof a !== 'string' && a.args.some(callback))
 		);
 
-		return rules.some(
-			([left, right]) => checkSomeRuleCallback(right, (v) => deepEqual(v, left)),
-		) || null;
+		let appendRules: Rules = [];
+		let lastIteration = rules;
+		for (let i = 0; i < 2; i++) {
+			// console.log(lastIteration.map(pairRuleToString));
+			if (lastIteration.some(
+				([left, right]) => checkSomeRuleCallback(right,
+					(v) => deepEqualWithVars(v, left, {}, true)),
+			)) return false;
+			// eslint-disable-next-line no-loop-func
+			lastIteration = lastIteration.flatMap((rule) => getAllFunc(rule[1])
+				.flatMap((rep) => (allRuleByFuncName[rep.name] ?? [])
+					.flatMap((rule2) => {
+						const useVars: Record<string, Rule> = {};
+						if (!deepEqualWithVars(rule2[0], rep, useVars)) {
+							// console.log({
+							// 	st: false,
+							// 	rule: pairRuleToString(rule),
+							// 	rule2: pairRuleToString(rule2),
+							// 	useVars,
+							// });
+							return [];
+						}
+						// rule.map((r) => replaceVars(r, useVars));
+						// console.log({
+						// 	st: true,
+						// 	wasrule: pairRuleToString(rule),
+						// 	rule: pairRuleToString(
+						// 		rule.map((r) => replaceRule(
+						// 			replaceVars(r, useVars),
+						// 			replaceVars(rep, useVars),
+						// 			replaceVars(rule2[1], useVars),
+						// 		)) as [Rule, Rule],
+						// 	),
+						// 	rule2: pairRuleToString(rule2),
+						// 	useVars,
+						// });
+						return [rule.map((r) => replaceRule(
+							replaceVars(r, useVars),
+							replaceVars(rep, useVars),
+							replaceVars(rule2[1], useVars),
+						)) as [Rule, Rule]];
+					})));
+			allRuleByFuncName = lastIteration.reduce<Record<string, [Rule, Rule][] | undefined>>( // ! TODO: var first
+				// eslint-disable-next-line no-return-assign
+				(map, rule) => ((map[(rule[0] as Func).name] ??= []).push(rule), map),
+				allRuleByFuncName,
+			);
+			appendRules = appendRules.concat(lastIteration);
+		}
+
+		rules.push(...appendRules);
+
+		// console.log(appendRules.map(pairRuleToString));
+
+		return null;
 	},
 ] as const;
 
@@ -213,7 +332,10 @@ const parseAll = (s: string) => {
 const printAns = (type: boolean | null | Error) => {
 	let res;
 	switch (type) {
-		case null: res = 'Unknown'; break;
+		case null:
+			res = 'Unknown';
+			res = 'True';
+			break;
 		case true: res = 'True'; break;
 		case false: res = 'False'; break;
 		default: res = 'Syntax error';
@@ -224,14 +346,15 @@ const printAns = (type: boolean | null | Error) => {
 };
 
 // const readFileSync = (...a: any) => `
-// [y]
-// f(E,H)->f(D,D)
-//  g(D)->E
-//  f(y,y)->f(g(E),y)
-//  H->f(E,H)
+// [x]
+// f(g(x),x)->x
+// g(x)->D(x)
+// g(E)->f(D(E),H)
+// f(x,D(x))-> H
+
 // `;
 
-// // eslint-disable-next-line no-void
+// eslint-disable-next-line no-void
 // const writeFileSync = (...a: any) => void 0;
 
 const main = (): void => {
@@ -240,6 +363,7 @@ const main = (): void => {
 			readFileSync('test.trs', { encoding: 'utf8' }),
 		);
 
+		// console.dir({ rules: rules.map(pairRuleToString), vars, funcsDec }, { depth: null });
 		// console.log(
 		// 	CHECKERS.map((checker) => checker(rules, vars, funcsDec)),
 		// );
@@ -258,7 +382,9 @@ const main = (): void => {
 	}
 };
 
+// console.time('main');
 main();
+// console.timeEnd('main');
 
 // const { funcsDec, rules, vars } = parseAll(`
 // []

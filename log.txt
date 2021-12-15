@@ -1,8 +1,0 @@
-Test 001: True
-Total 1  tests are passed successfully.
-Total 0  tests are passed inconsistently.
-Total 0  monsters are faced.
-Total 0  syntax errors are found.
-Total 0  syntax errors are misfound.
-Total 0  timeouts are reached.
-tests

@@ -1,11 +1,12 @@
 {
-    "name": "lab4",
+    "name": "rk2",
     "version": "1.0.0",
     "description": "",
     "scripts": {
+        "test": "npx ts-node ./index.ts",
         "start": "npm run build && npm run docker",
         "build": "npx tsc",
-        "docker": "cd ../TerminatorBattle2021 && sudo ./run_docker.sh >./log.txt"
+        "docker": "cd ../TerminatorBattle2021 && sudo ./run_docker.sh >./log.txt && node -e \"var fs=require('fs'),s='\\n====> '+new Date().toLocaleTimeString('ru')+'\\n'+fs.readFileSync('./log.txt',{encoding:'utf8'}).match(/^Total.*\\n/mg).join('');fs.appendFileSync('./big-log.txt',s);console.log(s)\""
     },
     "author": "",
     "license": "ISC",
