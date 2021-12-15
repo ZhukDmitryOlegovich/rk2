@@ -1,0 +1,210 @@
+Sending build context to Docker daemon  442.9kB
+Step 1/28 : FROM ubuntu:18.04 as refal_host
+ ---> 5a214d77f5d7
+Step 2/28 : RUN apt-get update
+ ---> Using cache
+ ---> cba3b8a1f7f6
+Step 3/28 : RUN apt-get install -y git dos2unix curl unzip sed g++
+ ---> Using cache
+ ---> 4412e2d78996
+Step 4/28 : ENV NODE_VERSION=16.13.0
+ ---> Using cache
+ ---> 8bcb1a86ce47
+Step 5/28 : RUN apt install -y curl
+ ---> Using cache
+ ---> bbb61b5dcf3f
+Step 6/28 : RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+ ---> Using cache
+ ---> eeab457f91fb
+Step 7/28 : ENV NVM_DIR=/root/.nvm
+ ---> Using cache
+ ---> 3909e91b1e70
+Step 8/28 : RUN . "$NVM_DIR/nvm.sh" && nvm install ${NODE_VERSION}
+ ---> Using cache
+ ---> e1f0294ea4fb
+Step 9/28 : RUN . "$NVM_DIR/nvm.sh" && nvm use v${NODE_VERSION}
+ ---> Using cache
+ ---> 353997baee7c
+Step 10/28 : RUN . "$NVM_DIR/nvm.sh" && nvm alias default v${NODE_VERSION}
+ ---> Using cache
+ ---> d0079f241585
+Step 11/28 : ENV PATH="/root/.nvm/versions/node/v${NODE_VERSION}/bin/:${PATH}"
+ ---> Using cache
+ ---> 0f8c59372059
+Step 12/28 : RUN node --version
+ ---> Using cache
+ ---> 66ee57bae38d
+Step 13/28 : RUN npm --version
+ ---> Using cache
+ ---> 358887b79a0c
+Step 14/28 : WORKDIR /usr/src
+ ---> Using cache
+ ---> 4ec337748848
+Step 15/28 : RUN git clone https://github.com/bmstu-iu9/simple-refal-distrib.git
+ ---> Using cache
+ ---> 152c8fb03f11
+Step 16/28 : WORKDIR /usr/src/simple-refal-distrib
+ ---> Using cache
+ ---> 354640fb4419
+Step 17/28 : RUN ./bootstrap.sh
+ ---> Using cache
+ ---> c4f10e2848c3
+Step 18/28 : ENV PATH="/usr/src/simple-refal-distrib/bin:${PATH}"
+ ---> Using cache
+ ---> 303ffb2b10bc
+Step 19/28 : ENV RL_MODULE_PATH="/usr/src/simple-refal-distrib/lib:$RL_MODULE_PATH"
+ ---> Using cache
+ ---> 5d2c27000ef6
+Step 20/28 : COPY . /app
+ ---> 0d9f2668f2a9
+Step 21/28 : WORKDIR /app
+ ---> Running in bc1f97843039
+Removing intermediate container bc1f97843039
+ ---> 506f5576ce49
+Step 22/28 : RUN rlc dummy_terminator.ref
+ ---> Running in 4fe10851022f
+*Compiling dummy_terminator.ref:
+** Compilation succeeded **
+Removing intermediate container 4fe10851022f
+ ---> 334d0a23a16b
+Step 23/28 : RUN rlc test_check.ref
+ ---> Running in 942f3c2a710c
+*Compiling test_check.ref:
+** Compilation succeeded **
+Removing intermediate container 942f3c2a710c
+ ---> 53386e129454
+Step 24/28 : RUN rlc test_gen.ref
+ ---> Running in 38805261e430
+*Compiling test_gen.ref:
+** Compilation succeeded **
+Removing intermediate container 38805261e430
+ ---> aa7757341eb2
+Step 25/28 : RUN rlc total_results.ref
+ ---> Running in 22c12bbd1b19
+*Compiling total_results.ref:
+** Compilation succeeded **
+Removing intermediate container 22c12bbd1b19
+ ---> aed975fd72fe
+Step 26/28 : RUN dos2unix run_test.sh
+ ---> Running in ed1e6cedb227
+[91mdos2unix: converting file run_test.sh to Unix format...
+[0mRemoving intermediate container ed1e6cedb227
+ ---> 18b537e6fccc
+Step 27/28 : RUN chmod +x run_test.sh
+ ---> Running in 79344cc3085d
+Removing intermediate container 79344cc3085d
+ ---> 3ea47ee7743d
+Step 28/28 : ENTRYPOINT ["./run_test.sh"]
+ ---> Running in c0bd8682867d
+Removing intermediate container c0bd8682867d
+ ---> 588804c80f8c
+Successfully built 588804c80f8c
+Successfully tagged refal:tests
+
+Test 001: True
+Test 002: False
+Test 003: True
+Test 004: True
+Test 005: True
+Test 006: False
+Test 007: False
+Test 008: False
+Test 009: True
+Test 010: True
+Test 011: True
+Test 012: True
+Test 013: True
+Test 014: True
+Test 015: True
+Test 016: True
+Test 017: True
+Test 018: True
+Test 019: True
+Test 020: False
+Test 021: True
+Test 022: True
+Test 023: False
+Test 024: True
+Test 025: True
+Test 026: True
+Test 027: True
+Test 028: True
+Test 029: True
+Test 030: True
+Test 031: True
+Test 032: True
+Test 033: True
+Test 034: False
+Test 035: True
+Test 036: True
+Test 037: True
+Test 038: True
+Test 039: True
+Test 040: False
+Test 041: 
+Test 042: True
+Test 043: True
+Test 044: True
+Test 045: True
+Test 046: True
+Test 047: True
+Test 048: True
+Test 049: True
+Test 050: True
+Test 051: True
+Test 052: True
+Test 053: True
+Test 054: True
+Test 055: True
+Test 056: True
+Test 057: Syntax error
+Test 058: True
+Test 059: True
+Test 060: True
+Test 061: True
+Test 062: True
+Test 063: True
+Test 064: True
+Test 065: True
+Test 066: True
+Test 067: True
+Test 068: True
+Test 069: False
+Test 070: True
+Test 071: False
+Test 072: True
+Test 073: True
+Test 074: Syntax error
+Test 075: False
+Test 076: True
+Test 077: False
+Test 078: False
+Test 079: False
+Test 080: True
+Test 081: False
+Test 082: True
+Test 083: True
+Test 084: True
+Test 085: True
+Test 086: True
+Test 087: True
+Test 088: False
+Test 089: False
+Test 090: True
+Test 091: True
+Test 092: True
+Test 093: True
+Test 094: True
+Test 095: True
+Test 096: Syntax error
+Test 097: Syntax error
+Test 098: Syntax error
+Test 099: Syntax error
+Test 100: Syntax error
+Total 77  tests are passed successfully.
+Total 10  tests are passed inconsistently.
+Total 5  monsters are faced.
+Total 5  syntax errors are found.
+Total 2  syntax errors are misfound.
+Total 1  timeouts are reached.
+tests

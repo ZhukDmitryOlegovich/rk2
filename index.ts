@@ -215,9 +215,12 @@ const CHECKERS: readonly Checker[] = [
 		);
 
 		const setNewVars = (
-			v: string, r: Rule, useVars: Record<string, Rule>, deepCheck: boolean,
+			v: string, r: Rule, useVars: Record<string, Rule>,
+			deepCheck: boolean, fromLeft = true,
 		) => {
-			if (deepCheck && getAllTerm(r).includes(v)) {
+			if (v === r) return true;
+			if (deepCheck && fromLeft && getAllTerm(r).includes(v)) {
+				// console.log([ruleToString(r), getAllTerm(r), deepCheck, fromLeft]);
 				return false;
 			}
 			if (!useVars[v]) {
@@ -241,10 +244,10 @@ const CHECKERS: readonly Checker[] = [
 				return a === b;
 			}
 			if (typeof b === 'string') {
-				return vars.has(b) && setNewVars(b, a, useVars, deepCheck);
+				return vars.has(b) && setNewVars(b, a, useVars, deepCheck, false);
 			}
 			return a.name === b.name && a.args.every(
-				(_, i) => deepEqualWithVars(a.args[i], b.args[i], useVars),
+				(_, i) => deepEqualWithVars(a.args[i], b.args[i], useVars, deepCheck),
 			);
 		};
 
@@ -266,11 +269,14 @@ const CHECKERS: readonly Checker[] = [
 
 		let appendRules: Rules = [];
 		let lastIteration = rules;
-		for (let i = 0; i < 2; i++) {
+		const n = 2;
+		for (let i = 0; i < n; i++) {
 			// console.log(lastIteration.map(pairRuleToString));
 			if (lastIteration.some(
 				([left, right]) => checkSomeRuleCallback(right,
-					(v) => deepEqualWithVars(v, left, {}, true)),
+					(v) => (
+						// console.log({ v___: ruleToString(v), left: ruleToString(left) }),
+						deepEqualWithVars(v, left, {}, true))),
 			)) return false;
 			// eslint-disable-next-line no-loop-func
 			lastIteration = lastIteration.flatMap((rule) => getAllFunc(rule[1])
@@ -278,28 +284,8 @@ const CHECKERS: readonly Checker[] = [
 					.flatMap((rule2) => {
 						const useVars: Record<string, Rule> = {};
 						if (!deepEqualWithVars(rule2[0], rep, useVars)) {
-							// console.log({
-							// 	st: false,
-							// 	rule: pairRuleToString(rule),
-							// 	rule2: pairRuleToString(rule2),
-							// 	useVars,
-							// });
 							return [];
 						}
-						// rule.map((r) => replaceVars(r, useVars));
-						// console.log({
-						// 	st: true,
-						// 	wasrule: pairRuleToString(rule),
-						// 	rule: pairRuleToString(
-						// 		rule.map((r) => replaceRule(
-						// 			replaceVars(r, useVars),
-						// 			replaceVars(rep, useVars),
-						// 			replaceVars(rule2[1], useVars),
-						// 		)) as [Rule, Rule],
-						// 	),
-						// 	rule2: pairRuleToString(rule2),
-						// 	useVars,
-						// });
 						return [rule.map((r) => replaceRule(
 							replaceVars(r, useVars),
 							replaceVars(rep, useVars),
@@ -340,18 +326,15 @@ const printAns = (type: boolean | null | Error) => {
 		case false: res = 'False'; break;
 		default: res = 'Syntax error';
 	}
-	// eslint-disable-next-line no-console
-	console.log(res);
+	process.stdout.write(res);
 	writeFileSync('result', res);
 };
 
 // const readFileSync = (...a: any) => `
-// [x]
-// f(g(x),x)->x
-// g(x)->D(x)
-// g(E)->f(D(E),H)
-// f(x,D(x))-> H
-
+// [x,y,z,w]
+// f(x,y,z,w) -> f(y,x,y,x)
+// g(h(x,y)) -> h(g(x),g(y))
+// g(x) -> x
 // `;
 
 // eslint-disable-next-line no-void

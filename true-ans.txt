@@ -1,0 +1,100 @@
+Test 001: True
+Test 002: False
+Test 003: True
+Test 004: True
+Test 005: True
+Test 006: False
+Test 007: False
+Test 008: False			(monster)
+Test 009: True
+Test 010: True
+Test 011: True
+Test 012: True
+Test 013: True
+Test 014: True
+Test 015: True
+Test 016: True
+Test 017: True
+Test 018: True
+Test 019: True
+Test 020: False
+Test 021: True
+Test 022: True
+Test 023: False
+Test 024: True
+Test 025: True
+Test 026: True
+Test 027: True
+Test 028: True
+Test 029: True
+Test 030: True
+Test 031: True
+Test 032: True
+Test 033: True
+Test 034: False
+Test 035: True
+Test 036: True
+Test 037: True
+Test 038: True
+Test 039: True
+Test 040: False			(fail)
+Test 041: 				(my fail)	(timeout / memory limit)
+Test 042: True
+Test 043: True
+Test 044: True
+Test 045: False			(my fail)	(correct with n = 4 (def = 2))
+Test 046: True			(monster)
+Test 047: True
+Test 048: True			(monster)
+Test 049: False						(correct with n = 5 (def = 2))
+Test 050: True
+Test 051: True
+Test 052: True
+Test 053: True
+Test 054: True
+Test 055: True
+Test 056: True
+Test 057: Syntax error	(fail)
+Test 058: True
+Test 059: True
+Test 060: True
+Test 061: True
+Test 062: True
+Test 063: True
+Test 064: True
+Test 065: True
+Test 066: True
+Test 067: True
+Test 068: True
+Test 069: False
+Test 070: True
+Test 071: False
+Test 072: True
+Test 073: False			(my fail?)	(don't now)
+Test 074: Syntax error	(fail)
+Test 075: False			(fail)
+Test 076: False			(my fail)	(correct with n = 3 (def = 2))
+Test 077: False			(fail)
+Test 078: False
+Test 079: False
+Test 080: False			(my fail)	(correct? for n > 2, but memory limit)
+Test 081: False
+Test 082: True
+Test 083: True
+Test 084: True
+Test 085: True
+Test 086: True
+Test 087: False			(my fail?)	(don't now)
+Test 088: False
+Test 089: False
+Test 090: True
+Test 091: True
+Test 092: False			(my fail)	(correct with n > 2)
+Test 093: True
+Test 094: True			(monster)
+Test 095: True			(monster)
+Test 096: Syntax error
+Test 097: Syntax error
+Test 098: Syntax error
+Test 099: Syntax error
+Test 100: Syntax error
